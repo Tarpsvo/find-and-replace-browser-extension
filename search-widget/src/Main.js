@@ -21,7 +21,7 @@ class Main extends React.Component {
       wholeWordsInput: false,
       useRegexInput: false,
       limitToSelectionInput: false,
-      includeOneLineFieldsInput: false,
+      includeOneLineFieldsInput: true,
       addedToFavourites: false,
       contentScriptSearch: {
         searchIndex: 0,

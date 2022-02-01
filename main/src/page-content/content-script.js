@@ -49,14 +49,16 @@
   });
   const ALLOWED_SINGLE_LINE_INPUT_TYPES = ["text", "search", "url", "email"];
   const SINGLE_LINE_INPUT_SELECTOR =
-    "input:not([type], :readonly, :disabled), " +
+    "input:not([type]), " +
     ALLOWED_SINGLE_LINE_INPUT_TYPES.map(
-      (type) => `input[type="${type}"]:not(:readonly, :disabled)`
+      (type) => `input[type="${type}"]:not([readonly], [disabled])`
     ).join(", ");
   const CONTENTEDITABLE_SELECTOR = "[contenteditable]";
-  const TEXTAREA_SELECTOR = "textarea:not(:readonly, :disabled)";
+  const TEXTAREA_SELECTOR = "textarea";
   // Main function that creates connections and inits API
   setUpApi();
+
+  console.info("hello", SINGLE_LINE_INPUT_SELECTOR);
 
   /**
    * Move the active highlight class to an element at position index
