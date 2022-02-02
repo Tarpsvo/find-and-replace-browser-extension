@@ -1,13 +1,12 @@
 import React from "react";
 import FontAwesome from "react-fontawesome";
-
 import { Button, Checkbox, Star } from "./InputElements";
 import ButtonPanel from "./panels/ButtonPanel";
 import AdvancedSearchInfo from "./AdvancedSearchInfo";
-
 import ConnectionApi from "./ConnectionApi";
 import Storage from "./Storage";
 import Analytics from "./Analytics";
+import debounce from "lodash/debounce";
 
 class Main extends React.Component {
   constructor(props) {
@@ -59,6 +58,11 @@ class Main extends React.Component {
 
     // Register content-script response listener
     ConnectionApi.addResponseHandler(this.handleContentScriptApiResponse);
+
+    this.sendDebouncedSearchUpdate = debounce(
+      this.sendDebouncedSearchUpdate.bind(this),
+      500
+    );
   }
 
   componentDidMount() {
@@ -98,13 +102,17 @@ class Main extends React.Component {
       () => {
         // Do not send search update if only replaceText changed (unless regex preview active)
         if (name != "replaceTextInput" || this.state.useRegexInput) {
-          this.sendSearchUpdate();
+          this.sendDebouncedSearchUpdate();
         }
         // Save the full state (async low priority)
         Storage.saveSearchState(this.getSearchStateForStorage());
         this.checkIfStateInFavourites();
       }
     );
+  }
+
+  sendDebouncedSearchUpdate() {
+    return this.sendSearchUpdate();
   }
 
   checkIfStateInFavourites() {
@@ -198,6 +206,8 @@ class Main extends React.Component {
   }
 
   sendSearchUpdate() {
+    console.info("debounced lmao sendSearchUpdate");
+
     // Notify content script to update search
     ConnectionApi.updateSearch({
       query: this.state.findTextInput,
@@ -364,6 +374,7 @@ class Main extends React.Component {
   renderTextFieldInputs() {
     const invalidFindInput =
       this.state.useRegexInput && this.state.contentScriptError.invalidRegex;
+
     const FindFieldInput = (
       <input
         type="text"
