@@ -54,11 +54,9 @@
       (type) => `input[type="${type}"]:not([readonly], [disabled])`
     ).join(", ");
   const CONTENTEDITABLE_SELECTOR = "[contenteditable]";
-  const TEXTAREA_SELECTOR = "textarea";
+  const TEXTAREA_SELECTOR = "textarea:not([readonly], [disabled])";
   // Main function that creates connections and inits API
   setUpApi();
-
-  console.info("hello", SINGLE_LINE_INPUT_SELECTOR);
 
   /**
    * Move the active highlight class to an element at position index
@@ -741,6 +739,7 @@
           // console.log("Widget Log: ", ...msg.data);
           break;
         case "updateSearch":
+          console.info("updateSearch called");
           updateSearch(msg.data).then((errors) => {
             const response = {
               reply: msg.action,
