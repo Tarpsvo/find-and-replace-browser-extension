@@ -1,17 +1,21 @@
 // Injected into the currently active tab when context menu item is clicked
 
 (() => {
-  
   const activeElement = document.activeElement;
   const tagName = activeElement && activeElement.tagName.toLowerCase();
-  const isEditable = (tagName == 'textarea' || tagName == 'input' || tagName == 'iframe' ||
-      (activeElement && activeElement.hasAttribute('contenteditable')));
+  const isEditable =
+    tagName == "textarea" ||
+    tagName == "input" ||
+    tagName == "iframe" ||
+    (activeElement && activeElement.hasAttribute("contenteditable"));
 
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const displayText = isEditable ? `Press ${isMac ? 'Cmd' : 'Ctrl'}+Shift+F` : 'Text is not editable';
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const displayText = isEditable
+    ? `Press ${isMac ? "Cmd" : "Ctrl"}+Shift+F`
+    : "Text is not editable";
 
   // Create a new DOM element with a hint text
-  const hintText = document.createElement('div');
+  const hintText = document.createElement("div");
   hintText.innerText = displayText;
   hintText.style.cssText = `
     all: initial;
@@ -34,9 +38,7 @@
     hintText.style.opacity = 0;
   }, 1000);
   setTimeout(() => {
-    hintText.style.display = 'none';
+    hintText.style.display = "none";
     hintText.remove();
   }, 2000);
-
 })();
-

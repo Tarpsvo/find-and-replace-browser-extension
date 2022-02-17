@@ -120,6 +120,11 @@
       .removeClass(CLASSES.currentHighlight)
       .removeClass(CLASSES.regularHighlight);
 
+    const nativeInputEvent = new Event("input", {
+      bubbles: true,
+      cancelable: true,
+    });
+
     // Check if this is a textarea highlight
     const $wrapper = $nodes.eq(0).closest(SELECTORS.textareaContainer);
     if ($wrapper.length != 0) {
@@ -131,6 +136,9 @@
       const $textarea = $wrapper.find(SELECTORS.textareaInput);
       const $mirror = $wrapper.find(SELECTORS.textareaContentMirror);
       $textarea.val($mirror.text());
+
+      // Send event to update Vue
+      $textarea.get(0).dispatchEvent(nativeInputEvent);
     } else {
       // Contenteditable - we should use document.execCommand()
       const $cEditableWrapper = $nodes.eq(0).closest(CONTENTEDITABLE_SELECTOR);
@@ -140,10 +148,6 @@
       });
       // Trigger change event so that possible event listeners update appropriately
       if ($cEditableWrapper.length != 0) {
-        const nativeInputEvent = new Event("input", {
-          bubbles: true,
-          cancelable: true,
-        });
         $cEditableWrapper.get(0).dispatchEvent(nativeInputEvent);
       }
     }
@@ -736,10 +740,9 @@
           shutdown();
           break;
         case "log":
-          // console.log("Widget Log: ", ...msg.data);
+          console.log("Widget Log: ", ...msg.data);
           break;
         case "updateSearch":
-          console.info("updateSearch called");
           updateSearch(msg.data).then((errors) => {
             const response = {
               reply: msg.action,
