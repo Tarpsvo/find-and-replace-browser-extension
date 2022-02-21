@@ -49,12 +49,12 @@
   });
   const ALLOWED_SINGLE_LINE_INPUT_TYPES = ["text", "search", "url", "email"];
   const SINGLE_LINE_INPUT_SELECTOR =
-    "input:not([type]), " +
+    "input:not([type]):visible, " +
     ALLOWED_SINGLE_LINE_INPUT_TYPES.map(
-      (type) => `input[type="${type}"]:not([readonly], [disabled])`
+      (type) => `input[type="${type}"]:not([readonly], [disabled]):visible`
     ).join(", ");
-  const CONTENTEDITABLE_SELECTOR = "[contenteditable]";
-  const TEXTAREA_SELECTOR = "textarea:not([readonly], [disabled])";
+  const CONTENTEDITABLE_SELECTOR = "[contenteditable]:visible";
+  const TEXTAREA_SELECTOR = "textarea:not([readonly], [disabled]):visible";
   // Main function that creates connections and inits API
   setUpApi();
 
