@@ -71,6 +71,7 @@
     if (termCount != 0) {
       index = ((index % termCount) + termCount) % termCount;
       Search.activeTermIndex = index;
+
       const $current = Search.groupedMarks[index].$marks.addClass(
         CLASSES.currentHighlight
       );
@@ -112,10 +113,14 @@
    *    performs the replacement in the first node if matched accross elements
    */
   function replaceCurrent(resultText) {
-    if (Search.groupedMarks.length == 0) {
-      return;
-    }
+    if (Search.groupedMarks.length == 0) return;
+
     resultText = resultText.replace(/\\n/g, "\n"); // allow newline characters
+    const $curHiglight = $(SELECTORS.currentHighlight, Context.doc);
+    const $parent = $curHiglight.length && $curHiglight.get(0).parentNode;
+    const replacablesCount = $(".hwt-mark-highlight", $parent).length;
+    const isLastItem = replacablesCount === 1;
+
     const $nodes = $(SELECTORS.currentHighlight, Context.doc)
       .removeClass(CLASSES.currentHighlight)
       .removeClass(CLASSES.regularHighlight);
@@ -138,7 +143,9 @@
       $textarea.val($mirror.text());
 
       // Send event to update Vue
-      $textarea.get(0).dispatchEvent(nativeInputEvent);
+      if ($textarea.length > 0 && isLastItem) {
+        $textarea.get(0).dispatchEvent(nativeInputEvent);
+      }
     } else {
       // Contenteditable - we should use document.execCommand()
       const $cEditableWrapper = $nodes.eq(0).closest(CONTENTEDITABLE_SELECTOR);
@@ -146,14 +153,16 @@
         $(el).text(index == 0 ? resultText : "");
         Utils.flattenNode(el);
       });
+
       // Trigger change event so that possible event listeners update appropriately
-      if ($cEditableWrapper.length != 0) {
+      if ($cEditableWrapper.length > 0 && isLastItem) {
         $cEditableWrapper.get(0).dispatchEvent(nativeInputEvent);
       }
     }
 
     // Delete term mark-group from our list
     Search.groupedMarks.splice(Search.activeTermIndex, 1);
+
     // Set to same index because count decreased
     setOccurrenceIndex(Search.activeTermIndex);
   }
@@ -398,11 +407,13 @@
           };
           try {
             const regexp = Utils.constructRegExpFromSearchParams(params);
+
             // Save regexp for reuse, (but not 'g' mod due to lastIndex issue)
             Search.lastSearchRegexp = new RegExp(
               regexp.source,
               regexp.flags.replace("g", "")
             );
+
             Search.lastSearchUsedRegexp = params.useRegex;
             // Mark.js
             $elements.markRegExp(regexp, options);
@@ -582,12 +593,12 @@
   }
 
   function getReplaceText(text) {
-    if (!Search.lastSearchUsedRegexp) {
-      return text;
-    }
+    if (!Search.lastSearchUsedRegexp) return text;
+
     // replace regex groups
     const currentOccurrenceText = getCurrentOccurrenceText();
     const matches = Search.lastSearchRegexp.exec(currentOccurrenceText);
+
     const placeholderChar = "◵";
     if (matches && matches.length > 0) {
       // Replace starting from the largest number (replace $11 before $1)
