@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Search & Replace",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "Adds a search and replace tool for input fields and editable text content.",
   "author": "Tarvo Reinpalu",
   "icons": {
@@ -9,12 +9,11 @@
     "48": "images/icon48.png",
     "32": "images/icon32.png"
   },
-  "permissions": ["activeTab", "contextMenus", "storage"],
+  "permissions": ["activeTab", "contextMenus", "storage", "scripting"],
   "background": {
-    "persistent": false,
-    "scripts": ["src/background.js"]
+    "service_worker": "src/background.js"
   },
-  "browser_action": {
+  "action": {
     "default_title": "Search & Replace",
     "default_popup": "src/widget/widget.html",
     "default_icon": {

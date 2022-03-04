@@ -1,6 +1,12 @@
 // Background extension page - Event page (only runs based on event listeners)
 // Console log messages will not be shown (only shown in special console)
 
+async function getCurrentTab() {
+  let queryOptions = { active: true, currentWindow: true };
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+}
+
 function setUpExtensionInstallEvents() {
   if (chrome && chrome.runtime && chrome.runtime.setUninstallURL) {
     // chrome.runtime.setUninstallURL(
@@ -16,6 +22,8 @@ function setUpExtensionInstallEvents() {
 }
 
 function setUpContextMenu() {
+  console.info("setUpContextMenu");
+
   const contextMenuHandlingContentScriptFilepath =
     "src/page-content/context-menu-content-script.js";
   const contextMenuItemId = "find_replace_context_item";
@@ -27,15 +35,18 @@ function setUpContextMenu() {
   });
 
   // Context menu handler
-  chrome.contextMenus.onClicked.addListener((info) => {
+  chrome.contextMenus.onClicked.addListener(async (info) => {
     if (!info.selectionText) {
       console.warn("Invalid context menu command.");
       return;
     }
     const selectionText = info.selectionText;
     // Pop-up is closed and cannot be opened - insert content script instead
-    chrome.tabs.executeScript(/* tabId - defaults to the active tab */ null, {
-      file: contextMenuHandlingContentScriptFilepath,
+    console.info("current tab is", await getCurrentTab());
+
+    chrome.scripting.executeScript({
+      target: { tabId: (await getCurrentTab()).id },
+      files: [contextMenuHandlingContentScriptFilepath],
     });
     // User expects to search in the text selection - update Storage
     const searchStateKey = "search-state"; // fixed ID
@@ -59,10 +70,12 @@ function setUpContextMenu() {
  */
 function executeScripts(sources) {
   const executeScriptPromise = (source) =>
-    new Promise((resolve) => {
-      chrome.tabs.executeScript(
-        /* tabId - defaults to the active tab */ null,
-        { file: source },
+    new Promise(async (resolve) => {
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: (await getCurrentTab()).id },
+          files: [source],
+        },
         resolve
       );
     });
@@ -72,7 +85,7 @@ function executeScripts(sources) {
   });
 }
 
-function injectContentScripts() {
+async function injectContentScripts() {
   // Inject the following sources
   const scripts = [
     "src/page-content/lib/jquery-3.2.1.min.js",
@@ -80,10 +93,9 @@ function injectContentScripts() {
     "src/page-content/lib/jquery.mark.min.js",
     "src/page-content/content-script.js",
   ];
-  chrome.tabs.insertCSS(null, {
-    file: "src/page-content/content-script.css",
-    allFrames: true,
-    matchAboutBlank: true,
+  chrome.scripting.insertCSS({
+    target: { tabId: (await getCurrentTab()).id, allFrames: true },
+    files: ["src/page-content/content-script.css"],
   });
   executeScripts(scripts);
 }
@@ -107,7 +119,7 @@ function sendContentScriptShutdownCmd(contentScriptConnection) {
 function setUpMessageConnections() {
   let contentScriptConnection = null;
 
-  chrome.runtime.onConnect.addListener((port) => {
+  chrome.runtime.onConnect.addListener(async (port) => {
     // port.name matches the one defined in the runtime.connect call
     if (port.name == "content-script-connection") {
       contentScriptConnection = port;
@@ -122,17 +134,13 @@ function setUpMessageConnections() {
       // Widget has been spawn
       // Inject a content script checking if the page has been initialized
       //  (and script triggers port reconnect if it has)
-      chrome.tabs.executeScript(
-        null,
+      chrome.scripting.executeScript(
         {
-          file: "src/page-content/init-content-script.js",
+          target: { tabId: (await getCurrentTab()).id },
+          files: ["src/page-content/init-content-script.js"],
         },
-        ([initialized = false]) => {
-          console.log("Script previously injected?: ", initialized);
-          if (!initialized) {
-            // Content scripts not injected yet
-            injectContentScripts();
-          }
+        ([initialized]) => {
+          if (!initialized.result) injectContentScripts();
         }
       );
       // Listen for widget shutdown
