@@ -18,7 +18,7 @@ function setUpExtensionInstallEvents() {
 function setUpContextMenu() {
   const contextMenuHandlingContentScriptFilepath =
     "src/page-content/context-menu-content-script.js";
-  const contextMenuItemId = "default_context_menu_item";
+  const contextMenuItemId = "find_replace_context_item";
 
   chrome.contextMenus.create({
     id: contextMenuItemId,
